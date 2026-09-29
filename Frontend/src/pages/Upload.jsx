@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-export default function Upload({ onUploadSuccess }) {
+export default function Upload({ onUploadSuccess, token }) {
   const [file, setFile] = useState(null)
   const [status, setStatus] = useState("")
   const [loading, setLoading] = useState(false)
@@ -16,6 +16,7 @@ export default function Upload({ onUploadSuccess }) {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/documents/upload`, {
         method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       })
 
