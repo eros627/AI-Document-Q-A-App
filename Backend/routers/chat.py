@@ -1,8 +1,9 @@
 import os
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import anthropic
+from auth import get_current_user
 from services.retrieval import retrieve_relevant_chunks
 
 router = APIRouter()
@@ -37,15 +38,14 @@ def stream_claude(prompt: str):
 
 
 @router.post("/ask")
-async def ask_question(request: ChatRequest):
+async def ask_question(
+    request: ChatRequest,
+    user=Depends(get_current_user)
+):
     try:
-        chunks = retrieve_relevant_chunks(request.question, request.doc_id)
+        chunks = retrieve_relevant_chunks(request.question, request.doc_id, user.id)
     except Exception:
         raise HTTPException(status_code=404, detail="Document not found.")
 
     prompt = build_prompt(request.question, chunks)
-
-    return StreamingResponse(
-        stream_claude(prompt),
-        media_type="text/plain"
-    )
+    return StreamingResponse(stream_claude(prompt), media_type="text/plain")
